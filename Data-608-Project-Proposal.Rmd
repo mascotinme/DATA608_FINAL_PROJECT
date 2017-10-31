@@ -1,0 +1,155 @@
+---
+title: "|IS 608: KNOWLEDGE & VISUAL ANALYTICS - PROJECT PROPOSAL\n|  Data Analytics
+  \ \n"
+author: ' Author:MUSA T GANIYU'
+date: "Oct. 20th, 2017"
+output:
+  html_document:
+    code_folding: hide
+    fig_caption: yes
+    fig_height: 9
+    fig_width: 9
+    highlight: tango
+    keep_md: yes
+    theme: cerulean
+    toc: yes
+    toc_depth: 2
+    toc_float:
+      collapsed: yes
+      number_sections: yes
+      smooth_scroll: no
+  pdf_document:
+    toc: yes
+    toc_depth: '2'
+  word_document:
+    toc: yes
+    toc_depth: '2'
+---
+
+
+
+##Aim: 
+The goal of this project is to:
+
+*	Does demographics like Age, Sex, Location have impact on types of death, economic status?
+*	Show the merit and demerit of visual analytics on data analysis, and how to improve it.
+*	Make the visualized image(s) tells the story in an unambiguous way, understandable, even to a layman!
+
+
+
+##Methodology:
+
+The project would lay more emphasis on the explanatory techniques. It will be used in making data presentation to the viewers in a more succinct way. I therefore plan to use the R programing language to explore and analysis the dataset.
+  
+The dataset to be used is the World Health Nutrition and Population Statistics from year 2010 to 2016 . This can be obtained from http://databank.worldbank.org/data/reports.aspx?source=health-nutrition-and-population-statistics#advancedDownloadOptions . 
+
+
+
+Load this libraries and dataset and lets get to work!
+
+```{R}
+suppressMessages(library(knitr))
+suppressMessages(library(dplyr))
+suppressMessages(library(ggplot2))
+suppressMessages(library(plotly))
+suppressMessages(library(sqldf))
+suppressPackageStartupMessages(library(googleVis))
+
+df <- read.csv("World_Health_2.csv", header = TRUE, sep = ",", stringsAsFactors = FALSE)
+kable(head(df[200:206, ]))
+```
+
+* World longitudes and latitudes
+
+```{R}
+lat_long <- read.csv("Countries_long_lat2.csv", header = TRUE, sep = ",")
+colnames(lat_long) <- c("Country", "Country_Code", "Latitude", "Longtitude")
+kable(head(lat_long))
+
+```
+
+Cleaning and renaming of dataset and column respectively.
+
+```{R}
+options(warn = -1)
+df2 <- merge(df, lat_long, by.x = "Country_Code", by.y = "Country_Code", all = FALSE)
+df2[, 5:11] <- sapply(df2[, 5:11], as.numeric)
+```
+
+Merging column lonitude and Latitude together for a better coordinate to be in maps (googlevis)
+
+```{R}
+df2$Lat_Long = paste(df2$Latitude, df2$Longtitude, sep=":")
+```
+
+
+> we are now to goint make use of sql to subset(query) columns so as to diffentiate between year 2000 and 2010 where the number children orphaned by HIV/AIDS more than 50000.
+
+```{R}
+sq <- sqldf("select Lat_Long, Country_Name, YR2000, YR2010 from df2 
+            where YR2010 >= 50000 and YR2000 >= 50000 and Series_Name ='Children orphaned by HIV/AIDS'
+            order by YR2010, YR2000 limit 20")
+head(sq)
+```
+
+
+```{R}
+
+```
+
+
+
+* The world map showing the countries where children are orphaned by HIV?AIDS (2000, 2010)
+
+```{R}
+
+Show_map <- gvisMap(sq, "Lat_Long" , "Country_Name",
+              options=list(showTip=TRUE, mapType='normal',
+              enableScrollWheel=TRUE,
+              icons=paste0("{",
+              "'default': {'normal': 'http://icons.iconarchive.com/",
+              "icons/icons-land/vista-map-markers/48/",
+              "Map-Marker-Ball-Azure-icon.png',\n",
+              "'selected': 'http://icons.iconarchive.com/",
+              "icons/icons-land/vista-map-markers/48/",
+              "Map-Marker-Ball-Right-Azure-icon.png'",
+              "}}")))
+                        
+plot(Show_map)
+
+```
+
+![Note that this map was saved to my local file. For an interactive, kindly run the code above](C:\Users\mayowa\Pictures\data608_map.PNG)
+
+```{R}
+
+
+g <- ggplot(sq, aes(YR2010, YR2000)) +
+  geom_line(aes(colour = Country_Name)) +
+  labs(title = "Top 20 Countries Where Children Orphaned by HIV/AIDS For YRS 2000 & 2010 ") +
+  geom_smooth(se = TRUE)
+
+ggplotly(g)
+```
+
+
+## Tools To Be Used:
+
+* GoogleVis
+* Plotly
+* GGplot2
+* Sqldf
+
+## Packages To Be Used:
+
+* Plotly
+* Knitr
+* Dplyr
+* Plyr
+* Reshape2
+* Ggplot2
+* Graphics
+* Ggthemes
+* GoogleVis
+ etc
+
